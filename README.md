@@ -2,9 +2,9 @@
 
 [한국어 문서](README.ko.md)
 
-This defensive experiment places a synthetic canary in public support content and a same-origin status path. An agent that treats instructions spread across several web responses as an operational procedure may hash a synthetic ticket and send the result to a verification endpoint. The server can record the request or deny that verification request.
+This repository implements a multi-stage indirect prompt-injection behavioral canary. It places a synthetic canary in public support content and a same-origin status path. An agent that treats instructions spread across several web responses as an operational procedure may hash a synthetic ticket and send the result to a verification endpoint. The server can record the request or deny that verification request. In the local trial, some sequences had model output between stages, showing multi-turn progression, while two runs chained their final six requests in one Bash call.
 
-The method uses indirect prompt injection as a detection signal. A verification request alone does not identify ARTEX, prove Bash use, establish malicious intent, or identify who completed the earlier stages. Start in observation mode and investigate validated events alongside service request records. This release does not support automatic session enforcement.
+A valid verification request is a behavioral detection signal. It alone does not identify ARTEX, prove Bash use, establish malicious intent, or identify who completed the earlier stages. Start in observation mode and investigate validated events alongside service request records. This release does not support automatic session enforcement.
 
 ## Why this is a signal
 
