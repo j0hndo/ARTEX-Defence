@@ -4,6 +4,8 @@
 
 이 문서는 카나리 사이드카를 기존 서비스의 지원 콘텐츠와 Nginx 가상 호스트에 연결한다. 저장소의 데모 사이트로 실제 앱을 대체하지 않는다. 카나리는 합성 데이터만 만들며, 확인 이벤트는 경보와 조사를 위한 탐색 신호다. 이 버전은 세션 자동 제한을 지원하지 않는다.
 
+지원 링크는 일반적인 앱 점검 중에 이 경로를 발견할 수 있게 한다. 실행별 JavaScript는 단계별 값을 노출하지만 확인 요청을 보내지 않는다. 유효한 반사에는 HTML, JavaScript, JSON에 분산된 값을 결합하고, 합성 티켓을 받아 SHA-256을 계산한 뒤 최종 URL을 별도로 요청하는 행동이 필요하다. 정상적인 페이지 표시나 기본적인 링크 수집은 이 단계를 스스로 수행하지 않는다. 사람이나 목적에 맞춘 크롤러도 재현할 수 있으므로 이 이벤트는 ARTEX만의 지문이 아니라 행동 신호다. 설계 근거와 증거의 한계는 [탐지 신호 설명](../README.ko.md#왜-탐지-신호가-되는가)에 정리했다.
+
 ## 사용할 파일
 
 | 파일 | 용도 |
@@ -33,8 +35,8 @@
 비공개 저장소에 접근할 권한이 있는 환경에서 다음을 실행한다.
 
 ```sh
-gh repo clone j0hndo/artex-canary-defense
-cd artex-canary-defense
+gh repo clone j0hndo/ARTEX-Defence
+cd ARTEX-Defence
 cp deploy/production.env.example deploy/production.env
 ```
 
@@ -102,7 +104,7 @@ docker compose --env-file deploy/production.env -f deploy/compose.production.yam
 
 ## 6. 경보와 미끼 요청 제한
 
-유효한 신호는 `GET /sys/sso-status/verifySSOStatus?run=RUN&gate=GATE&signature=SHA256_HEX` 요청이 **앞선** `overview → discovery JS → 합성 티켓 → 사건 안내 → review JS` 단계를 같은 호스트에서 유효 시간 내에 순서대로 마친 뒤 사이드카의 검증을 통과한 경우다. `SHA256_HEX`는 해당 실행의 합성 티켓 원문 UTF-8 바이트를 개행 없이 SHA-256으로 계산한 소문자 64자리 16진수 값이다. 실행 ID와 게이트는 일회성이다. 확인 경로에 접근했거나 64자리 해시를 보냈다는 이유만으로 탐지 성공으로 보지 않는다.
+유효한 신호는 `GET /sys/sso-status/verifySSOStatus?run=RUN&gate=GATE&signature=SHA256_HEX` 요청이 **앞선** `overview → discovery JS → 합성 티켓 → 사건 안내 → review JS` 단계를 같은 호스트에서 유효 시간 내에 순서대로 마친 뒤 사이드카의 검증을 통과한 경우다. `SHA256_HEX`는 해당 실행의 합성 티켓 원문 UTF-8 바이트를 개행 없이 SHA-256으로 계산한 소문자 64자리 16진수 값이다. 게이트는 실행마다 생성되며 유효한 최종 확인 요청을 수락하면 그 실행은 소모된다. 확인 경로에 접근했거나 64자리 해시를 보냈다는 이유만으로 탐지 성공으로 보지 않는다.
 
 사이드카는 유효한 최종 요청에만 `canary_match`를 기록한다. `CANARY_POLICY=observe`는 기록 후 200을 반환한다. `CANARY_POLICY=deny_verify`는 기록 후 **해당 위장 확인 요청에만** 403을 반환한다. 어느 설정도 에이전트의 다른 앱 요청을 자동 차단하지 않는다. [응답 정책 예시](../examples/policy/response-policy.yaml)는 후속 운영 안내이며, 서버가 읽거나 WAF에 설치하지 않는다.
 

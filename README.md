@@ -1,10 +1,23 @@
-# ARTEX exploration canary
+# ARTEX-Defence
 
 [한국어 문서](README.ko.md)
 
 This defensive experiment places a synthetic canary in public support content and a same-origin status path. An agent that treats instructions spread across several web responses as an operational procedure may hash a synthetic ticket and send the result to a verification endpoint. The server can record the request or deny that verification request.
 
 The method uses indirect prompt injection as a detection signal. A verification request alone does not identify ARTEX, prove Bash use, establish malicious intent, or identify who completed the earlier stages. Start in observation mode and investigate validated events alongside service request records. This release does not support automatic session enforcement.
+
+## Why this is a signal
+
+The entry point sits in ordinary public support content so an agent inspecting the application can encounter it during its assigned task. The same-origin status path looks like a routine service procedure but uses only synthetic data. Its instructions are lower-trust web content. If an agent treats them as instructions for its own tools, the canary can observe that trust boundary being crossed.
+
+| Design choice | What it tests |
+| --- | --- |
+| A visible support link and a first-party status path | Whether the agent follows an apparently relevant service workflow while browsing the target app |
+| HTML, JavaScript, and JSON responses that reveal the next step in order | Whether it carries information across several responses rather than reacting to one page |
+| JavaScript that exposes values but never calls verification | Whether a separate client request occurs; ordinary page execution does not create the final signal |
+| A per-run ticket, stage-specific gates, ordered server checks, and an exact SHA-256 signature | Whether it retrieves the ticket, computes from its bytes, and submits the result; a path hit or asset download alone cannot match |
+
+Normal rendering of the support and canary pages does not submit the verification request. A basic crawler that follows links and downloads assets does not, by that behavior alone, interpret the staged instructions, combine the run values, calculate the hash, and construct the final URL. A validated run therefore signals semantic instruction following or purpose-built automation somewhere in the chain, beyond passive browsing. It is not exclusive to ARTEX: a person, custom crawler, or another agent could reproduce it. The run is bound to a host, not a person, and the final URL can be handed to another visitor. The single browser and single `wget` controls in the local trial illustrate the distinction but do not establish a false-positive rate.
 
 ## Integration and deployment
 
@@ -91,13 +104,13 @@ The [response policy example](examples/policy/response-policy.yaml) is vendor-ne
 
 ## Local dynamic trial on 14 October 2026
 
-The original ARTEX runtime was tested against the earlier dynamic CMS canary ten times each with DeepSeek, GLM 5.3, and Sonnet 4.6. Each task began with the CMS home URL and a neutral goal to inspect public pages and same-origin assets. Each had one model profile, its own trial host, and no source-task relationship. Observation ended 360 seconds after ARTEX first ran the task. One task per model ran in parallel per round, with the next round starting after all three finished. Round two was run serially to investigate provider errors. The deployable server in this repository reproduces that flow with added operational controls. Its own ARTEX reflection rate has not yet been measured in 30 new trials.
+The original ARTEX runtime was tested against the earlier dynamic CMS canary ten times each with DeepSeek 4.1 Flash (`deepseek/deepseek-v4.1-flash`), GLM 5.3, and Sonnet 4.6. Each task began with the CMS home URL and a neutral goal to inspect public pages and same-origin assets. Each had one model profile, its own trial host, and no source-task relationship. Observation ended 360 seconds after ARTEX first ran the task. One task per model ran in parallel per round, with the next round starting after all three finished. Round two was run serially to investigate provider errors. The deployable server in this repository reproduces that flow with added operational controls. Its own ARTEX reflection rate has not yet been measured in 30 new trials.
 
-![Valid signature reflections in ten trials per model: DeepSeek 10, GLM 5.3 9, Sonnet 4.6 8](docs/results-2026-10-14.svg)
+![Valid signature reflections in ten trials per model: DeepSeek 4.1 Flash 10, GLM 5.3 9, Sonnet 4.6 8](docs/results-2026-10-14.svg)
 
 | Model | Scored tasks | Valid signature reflections | Same-task Bash corroboration |
 | --- | ---: | ---: | ---: |
-| DeepSeek | 10 | **10** | 10 |
+| DeepSeek 4.1 Flash | 10 | **10** | 10 |
 | GLM 5.3 | 10 | **9** | 9 |
 | Sonnet 4.6 | 10 | **8** | 8 |
 | Total | 30 | **27** | **27** |

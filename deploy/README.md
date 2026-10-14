@@ -4,6 +4,8 @@
 
 This guide connects the canary sidecar to a live application's existing support content and Nginx virtual host. It does not replace the application with the repository's demo site. The canary creates synthetic data only. Its verification event is an exploration signal for alerting and investigation. This release does not support automatic session restriction.
 
+The support link makes the route discoverable during an ordinary app review. The generated JavaScript exposes staged values but does not call verification. A valid match requires the staged data from HTML, JavaScript, and JSON to be combined, the synthetic ticket to be retrieved and hashed, and a final URL to be requested. Normal page rendering and basic link collection do not perform those steps by themselves. A person or purpose-built crawler can reproduce them, so the event is a behavioral signal rather than an ARTEX fingerprint. See [why this is a signal](../README.md#why-this-is-a-signal) for the design and evidence limits.
+
 ## Files to use
 
 | File | Purpose |
@@ -24,7 +26,7 @@ Choose a support page that an unauthenticated visitor or the intended public-pag
 
 Use the actual application's HTTPS hostname, for example `app.example.com`. Keep the same `Host` value through Nginx and the sidecar for all stages. The sidecar allowlist checks the hostname and binds a run to the explicit `Host` port, if present. That check does not establish user identity. TLS termination and the intended virtual host must be enforced at the edge or application proxy.
 
-Ensure the public support page is under the same origin as the canary route. A link to another host loses the tested same-origin layout. If the application or its edge applies a Content Security Policy to the canary route, confirm that the route can load its generated same-origin JS. Review the route policy before changing any application-wide CSP. Plan a dedicated log retention period and rate limits for the new path. Check edge, CDN, WAF, analytics, and tracing configuration for query-string capture because the canary's one-time gates and signature appear in request URLs.
+Ensure the public support page is under the same origin as the canary route. A link to another host loses the tested same-origin layout. If the application or its edge applies a Content Security Policy to the canary route, confirm that the route can load its generated same-origin JS. Review the route policy before changing any application-wide CSP. Plan a dedicated log retention period and rate limits for the new path. Check edge, CDN, WAF, analytics, and tracing configuration for query-string capture because the canary's per-run gates and signature appear in request URLs.
 
 The sidecar renders an `Aster` support header, service notices, and `SUP-6148` as reference presentation in `canary/server.py`. These are not facts about your service. Before a live rollout, adapt the visible copy, incident label, and JS presentation to fit the actual support area without implying a real account or SSO incident. Changes to these cues can change agent behavior, so repeat the browser control and agent reflection tests on the integrated app. The reported 30-trial rate does not transfer automatically to customized content.
 
@@ -33,8 +35,8 @@ The sidecar renders an `Aster` support header, service notices, and `SUP-6148` a
 From an authorized checkout of the private repository:
 
 ```sh
-gh repo clone j0hndo/artex-canary-defense
-cd artex-canary-defense
+gh repo clone j0hndo/ARTEX-Defence
+cd ARTEX-Defence
 cp deploy/production.env.example deploy/production.env
 ```
 
@@ -102,7 +104,7 @@ docker compose --env-file deploy/production.env -f deploy/compose.production.yam
 
 ## 6. Alert on the match and restrict only the decoy request
 
-A validated signal is a request shaped like `GET /sys/sso-status/verifySSOStatus?run=RUN&gate=GATE&signature=SHA256_HEX` that the sidecar accepts **after** the ordered `overview → discovery JS → synthetic ticket → incident → review JS` stages, within the run lifetime, on the same allowed host. `SHA256_HEX` is the lowercase 64-character SHA-256 of that run's exact synthetic ticket bytes with no newline. The run and gate are one-time values. A raw hit on the path or a syntactically valid 64-character hash alone is not a match.
+A validated signal is a request shaped like `GET /sys/sso-status/verifySSOStatus?run=RUN&gate=GATE&signature=SHA256_HEX` that the sidecar accepts **after** the ordered `overview → discovery JS → synthetic ticket → incident → review JS` stages, within the run lifetime, on the same allowed host. `SHA256_HEX` is the lowercase 64-character SHA-256 of that run's exact synthetic ticket bytes with no newline. The gates are generated for each run, and an accepted final verification consumes that run. A raw hit on the path or a syntactically valid 64-character hash alone is not a match.
 
 The sidecar records `canary_match` only for the accepted final request. `CANARY_POLICY=observe` records it and returns 200. `CANARY_POLICY=deny_verify` records it and returns 403 **on that decoy request**. Neither setting automatically blocks the agent's other application requests. The [response policy example](../examples/policy/response-policy.yaml) is guidance for downstream handling; the server does not read that file or install WAF rules.
 
