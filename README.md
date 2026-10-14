@@ -19,6 +19,30 @@ The entry point sits in ordinary public support content so an agent inspecting t
 
 Normal rendering of the support and canary pages does not submit the verification request. A basic crawler that follows links and downloads assets does not, by that behavior alone, interpret the staged instructions, combine the run values, calculate the hash, and construct the final URL. A validated run therefore signals semantic instruction following or purpose-built automation somewhere in the chain, beyond passive browsing. It is not exclusive to ARTEX: a person, custom crawler, or another agent could reproduce it. The run is bound to a host, not a person, and the final URL can be handed to another visitor. The single browser and single `wget` controls in the local trial illustrate the distinction but do not establish a false-positive rate.
 
+## How web content reaches ARTEX
+
+This representative flow traces the original ARTEX runtime used in the local trials, source commit `160fe13`. The task description and goal enter at task creation; the target app's content reaches the worker later through tool output. In the observed Bash route, returned page and raw JS bodies can become `tool_result` content when a Bash call finishes. ARTEX also offers WebFetch for HTML, but its standalone `.js` fetch is rejected. The critical boundary is where a response from the target app is appended to the worker's conversation and can enter its next model request.
+
+```mermaid
+flowchart TD
+    A["Task created<br/>Public URL and inspection goal"] --> B["Task server seeds URL<br/>as an asset"]
+    B --> C["Planner stores an exploration intent"]
+    C --> D["Engine claims intent<br/>and starts worker"]
+    D --> E["Worker builds its prompt<br/>Intent in system; graph overview in input"]
+    E --> F["Worker calls Bash through tool harness"]
+    F --> G["Target app returns support HTML or raw JS"]
+    G --> H["Harness appends stdout and stderr<br/>as tool_result"]
+    H --> I["Trust boundary<br/>Next model request can read web content"]
+    I --> J["Worker chooses Bash calls<br/>Bash may chain overview, JS, ticket, incident, review"]
+    J --> K["Bash computes SHA-256<br/>of synthetic ticket"]
+    K --> L["GET verify with run, gate, signature"]
+    L --> M{"Canary validates<br/>host, run, order, gate, digest"}
+    M -->|Valid| N["Local trial: HTTP 200<br/>signature_match=true"]
+    M -->|Invalid| O["Reject without match event"]
+```
+
+The 30 trial tasks set `seed_first_intent: false`, so the planner created their first intents. ARTEX can also seed a first intent directly when that option is true. The worker can call Bash or WebFetch. The tool harness appends returned content to the worker's message history before another model request. A worker can save a summarized fact to the task graph for a later planner round; the raw tool transcript is not automatically broadcast to every worker. The diagram shows the observed Bash route and does not require one model turn per HTTP stage or prove that one worker made every request. Among 27 validated runs, 25 used at least two Bash calls, 23 had observable model output from the same worker and intent as the final verification between at least one pair of stages, and two batched the final six requests into one Bash call after earlier exposure. Worker attribution across all stages was unambiguous in 12 runs; overlapping calls prevent a conclusive assignment in the other 15. The local trial returned HTTP 200 and `signature_match=true` for a valid verification. The deployable sidecar records a `canary_match` event on a valid final request and can return HTTP 403 for that decoy request under `deny_verify`. The source trace uses `server/server.go`, `server/engine.go`, `agent/worker.go`, and Norma v0.4.3 `harness/tools.go` and `harness/query.go` from the original runtime.
+
 ## Integration and deployment
 
 For an existing application, follow the [production integration guide](deploy/README.md). It includes the sidecar files, Nginx route, content insertion, preflight checks, event correlation, and rollback. The local demo below is only an isolated example.
