@@ -2,6 +2,8 @@
 
 [한국어 문서](README.ko.md)
 
+[Coding-agent integration template](templates/AGENTS.md)
+
 This repository implements a multi-stage indirect prompt-injection behavioral canary. It places a synthetic canary in public support content and a same-origin status path. An agent that treats instructions spread across several web responses as an operational procedure may hash a synthetic ticket and send the result to a verification endpoint. The server can record the request or deny that verification request. In the local trial, some sequences had model output between stages, showing multi-turn progression, while two runs chained their final six requests in one Bash call.
 
 A valid verification request is a behavioral detection signal. It alone does not identify ARTEX, prove Bash use, establish malicious intent, or identify who completed the earlier stages. Start in observation mode and investigate validated events alongside service request records. This release does not support automatic session enforcement.
@@ -46,6 +48,8 @@ The 30 trial tasks set `seed_first_intent: false`, so the planner created their 
 ## Integration and deployment
 
 For an existing application, follow the [production integration guide](deploy/README.md). It includes the sidecar files, Nginx route, content insertion, preflight checks, event correlation, and rollback. The local demo below is only an isolated example.
+
+For an agent-assisted integration, give the coding agent access to both the host application and this repository. Have it read the [host application AGENTS.md template](templates/AGENTS.md). The service owner may install or merge that template into the host repository while preserving existing instructions. The [repository agent instructions](AGENTS.md) apply to this checkout. Do not place either file in public web assets.
 
 ## Placement and deployment
 
