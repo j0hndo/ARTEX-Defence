@@ -1,0 +1,37 @@
+services:
+  canary:
+    build:
+      context: ..
+      dockerfile: Dockerfile
+    environment:
+      CANARY_BIND: 0.0.0.0
+      CANARY_PORT: "8000"
+      CANARY_LOG: /var/log/canary/events.jsonl
+      CANARY_ALLOWED_HOSTS: ${CANARY_ALLOWED_HOSTS:?Set the public app hostname in deploy/production.env}
+      CANARY_TTL_SECONDS: ${CANARY_TTL_SECONDS:-300}
+      CANARY_MAX_ACTIVE_RUNS: ${CANARY_MAX_ACTIVE_RUNS:-1024}
+      CANARY_POLICY: ${CANARY_POLICY:-observe}
+      CANARY_TRUSTED_PROXY_CIDRS: ${CANARY_TRUSTED_PROXY_CIDRS:-}
+    ports:
+      - "127.0.0.1:19091:8000"
+    volumes:
+      - canary-production-logs:/var/log/canary
+    read_only: true
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    pids_limit: 64
+    restart: unless-stopped
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/healthz', timeout=2).close()
+      interval: 10s
+      timeout: 3s
+      retries: 3
+
+volumes:
+  canary-production-logs:

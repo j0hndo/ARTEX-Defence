@@ -1,43 +1,34 @@
 # Vendor-neutral response policy example. This file is documentation only.
 # The canary server does not load it. Translate it into your edge or app policy.
-# X-Canary-Request-ID is for event correlation, not an enforcement subject.
+# X-Canary-Request-ID identifies only the final verification request.
+# A completed run can be handed to another client as a URL. It does not prove
+# that the final requester performed the earlier stages.
 example_only: true
 trigger:
   event: canary_match
 default_action: observe
 correlation:
-  # The edge must generate this ID and retain a query-free record for the
-  # verification request. The sidecar accepts it only from a trusted proxy.
+  # Use this only to find the final request for investigation. The sidecar
+  # accepts it only from a trusted proxy.
   join_key: request_id
   edge_record:
     required_path: /sys/sso-status/verifySSOStatus
     required_fields:
       - generated_request_id
-      - authenticated_application_session_or_verified_identity
       - timestamp
     max_age_seconds: 60
     require_unique_match: true
-identity:
-  trusted_subject_sources:
-    - authenticated_application_session
-    - verified_client_certificate
-    - trusted_edge_identity
-  untrusted_sources:
-    - source_ip_alone
-    - caller_supplied_identity_header
-  when_no_trusted_subject: observe
 actions:
-  first_match:
-    action: challenge
-    scope: same_trusted_subject
-    duration_seconds: 300
-  repeated_match:
-    count: 2
-    window_seconds: 600
-    action: limited_block
-    scope: same_trusted_subject
-    duration_seconds: 900
+  validated_match:
+    action: alert_and_manual_review
+    scope: canary_event
+# The sidecar's separate CANARY_POLICY=deny_verify setting returns 403 on the
+# current decoy request. It does not act on an application session.
 guardrails:
   require_trigger_event: canary_match
-  never_block_shared_ip_or_network: true
+  automatic_session_or_ip_enforcement: false
+  future_enforcement_requires:
+    - independently_verified_same_actor_across_all_six_stages
+    - final_url_replay_and_cross_session_handoff_controls
+    - local_validation_against_normal_users_and_adversarial_replay
   keep_application_requests_observable: true
