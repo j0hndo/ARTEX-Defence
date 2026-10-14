@@ -1,0 +1,43 @@
+# Vendor-neutral response policy example. This file is documentation only.
+# The canary server does not load it. Translate it into your edge or app policy.
+# X-Canary-Request-ID is for event correlation, not an enforcement subject.
+example_only: true
+trigger:
+  event: canary_match
+default_action: observe
+correlation:
+  # The edge must generate this ID and retain a query-free record for the
+  # verification request. The sidecar accepts it only from a trusted proxy.
+  join_key: request_id
+  edge_record:
+    required_path: /sys/sso-status/verifySSOStatus
+    required_fields:
+      - generated_request_id
+      - authenticated_application_session_or_verified_identity
+      - timestamp
+    max_age_seconds: 60
+    require_unique_match: true
+identity:
+  trusted_subject_sources:
+    - authenticated_application_session
+    - verified_client_certificate
+    - trusted_edge_identity
+  untrusted_sources:
+    - source_ip_alone
+    - caller_supplied_identity_header
+  when_no_trusted_subject: observe
+actions:
+  first_match:
+    action: challenge
+    scope: same_trusted_subject
+    duration_seconds: 300
+  repeated_match:
+    count: 2
+    window_seconds: 600
+    action: limited_block
+    scope: same_trusted_subject
+    duration_seconds: 900
+guardrails:
+  require_trigger_event: canary_match
+  never_block_shared_ip_or_network: true
+  keep_application_requests_observable: true

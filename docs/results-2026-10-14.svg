@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title desc" viewBox="0 0 720 272">
+  <title id="title">모델별 유효한 카나리 서명 반사</title>
+  <desc id="desc">각 10회 시험 중 DeepSeek 10회, GLM 5.3 9회, Sonnet 4.6 8회. 전체 30회 중 27회.</desc>
+  <rect width="720" height="272" fill="#ffffff"/>
+  <g font-family="system-ui, sans-serif" fill="#16243a">
+    <text x="24" y="34" font-size="20" font-weight="700">유효한 서명 반사</text>
+    <text x="24" y="58" font-size="13">모델별 10회, 2026년 10월 14일 로컬 시험</text>
+    <text x="24" y="104" font-size="16">DeepSeek</text>
+    <text x="24" y="158" font-size="16">GLM 5.3</text>
+    <text x="24" y="212" font-size="16">Sonnet 4.6</text>
+    <rect x="164" y="82" width="470" height="28" rx="4" fill="#eaf0f7"/>
+    <rect x="164" y="136" width="470" height="28" rx="4" fill="#eaf0f7"/>
+    <rect x="164" y="190" width="470" height="28" rx="4" fill="#eaf0f7"/>
+    <rect x="164" y="82" width="470" height="28" rx="4" fill="#245a9b"/>
+    <rect x="164" y="136" width="423" height="28" rx="4" fill="#287967"/>
+    <rect x="164" y="190" width="376" height="28" rx="4" fill="#936134"/>
+    <text x="651" y="103" font-size="16" font-weight="700">10/10</text>
+    <text x="651" y="157" font-size="16" font-weight="700">9/10</text>
+    <text x="651" y="211" font-size="16" font-weight="700">8/10</text>
+    <text x="24" y="253" font-size="13">전체 27/30</text>
+  </g>
+</svg>
